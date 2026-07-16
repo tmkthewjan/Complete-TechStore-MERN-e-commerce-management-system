@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { MdEmail } from "react-icons/md";
 import { BiKey } from "react-icons/bi";
 import { FcGoogle } from "react-icons/fc";
+import api from "../utils/api";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,14 +24,21 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const res = await axios.post("http://localhost:3000/users/login", {
+      const res = await api.post("/users/login", {
         email: email.trim().toLowerCase(),
         password,
       });
 
       localStorage.setItem("token", res.data.token);
+      window.dispatchEvent(new Event("authChanged"));
+
       toast.success("Login Successful!");
-      navigate("/");
+
+      if (res.data.isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       console.log(err);
       toast.error(err.response?.data?.message || "Login Failed");
@@ -49,10 +56,7 @@ export default function LoginPage() {
       }}
     >
       <div className="w-[420px] backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
-        <h1 className="text-4xl font-bold text-center text-white mb-2">
-          Welcome Back
-        </h1>
-
+        <h1 className="text-4xl font-bold text-center text-white mb-2">Welcome Back</h1>
         <p className="text-center text-gray-200 mb-8">Login to your account</p>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -89,9 +93,9 @@ export default function LoginPage() {
               <input type="checkbox" />
               Remember Me
             </label>
-            <a href="#" className="text-blue-300 hover:text-blue-500">
+            <Link to="/forgot-password" className="text-blue-300 hover:text-blue-500">
               Forgot Password?
-            </a>
+            </Link>
           </div>
 
           <button

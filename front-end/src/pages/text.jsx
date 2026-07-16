@@ -1,87 +1,51 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaTwitter } from "react-icons/fa6";
+import uploadMedia from "../utils/uploadMedia";
 
 export default function TestPage() {
-  const [score, setScore] = useState(50);
-  const [mood, setMood] = useState("😐");
-  const [isFollowed, setIsFollowed] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [url, setUrl] = useState("");
+
+  async function handleUpload() {
+    if (!file) {
+      toast.error("Please select a file first");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const publicUrl = await uploadMedia(file);
+      setUrl(publicUrl);
+      toast.success("Upload successful!");
+      console.log(publicUrl);
+    } catch (err) {
+      console.log(err);
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
-    <div className="w-full h-screen bg-green-400 flex justify-center items-center">
-      <div className="w-[450px] h-[450px] bg-white flex justify-center items-center flex-col rounded-lg shadow-lg">
-        <h1 className="font-bold text-7xl">{score}</h1>
+    <div className="w-full h-screen bg-gray-50 flex flex-col justify-center items-center gap-4">
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files[0])}
+        className="border border-gray-300 rounded-lg p-2 bg-white"
+      />
 
-        <div className="w-full h-[100px] flex justify-center items-center">
-          <button
-            className="w-[100px] bg-red-600 text-white h-[40px] mx-5 rounded"
-            onClick={() => {
-              setScore(score - 1);
-            }}
-          >
-            Decrease
-          </button>
+      <button
+        onClick={handleUpload}
+        disabled={uploading}
+        className="bg-blue-600 px-6 py-3 rounded-lg text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+      >
+        {uploading ? "Uploading..." : "Upload"}
+      </button>
 
-          <button
-            className="w-[100px] bg-green-600 text-white h-[40px] mx-5 rounded"
-            onClick={() => {
-              setScore(score + 1);
-            }}
-          >
-            Increase
-          </button>
-        </div>
-
-        <h1 className="font-bold text-7xl">{mood}</h1>
-
-        <div className="w-full h-[100px] flex justify-center items-center">
-          <button
-            className="w-[100px] bg-red-600 text-white h-[40px] mx-5 rounded"
-            onClick={() => {
-              setMood("☹️");
-              toast.error("Oh no! You are sad");
-            }}
-          >
-            Sad
-          </button>
-
-          <button
-            className="w-[100px] bg-green-600 text-white h-[40px] mx-5 rounded"
-            onClick={() => {
-              setMood("😐");
-              toast("You are neutral", {
-                icon: "😐",
-              });
-            }}
-          >
-            Neutral
-          </button>
-
-          <button
-            className="w-[100px] bg-blue-600 text-white h-[40px] mx-5 rounded"
-            onClick={() => {
-              setMood("😀");
-              toast.success("Yay! You are happy");
-            }}
-          >
-            Happy
-          </button>
-        </div>
-
-        <FaTwitter
-          onClick={() => {
-            toast("Follow us on Twitter", {
-              icon: <FaTwitter className="text-blue-500" />,
-            });
-            setIsFollowed(!isFollowed);
-          }}
-          className={
-            isFollowed
-              ? "text-[100px] text-blue-600 cursor-pointer"
-              : "text-[100px] text-gray-600 cursor-pointer"
-          }
-        />
-      </div>
+      {url && (
+        <img src={url} alt="Uploaded" className="w-[200px] rounded-lg shadow-md" />
+      )}
     </div>
   );
 }
